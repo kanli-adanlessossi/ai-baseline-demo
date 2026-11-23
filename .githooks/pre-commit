@@ -1,0 +1,6 @@
+#!/bin/sh
+# Runs on every commit, whichever AI tool (or person) wrote the code.
+# Enable once per clone with: make hooks
+set -e
+python3 tools/scan_secrets.py --staged
+python3 tools/check_ai_layer.py

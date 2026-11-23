@@ -1,0 +1,31 @@
+{
+  "servers": {
+    "github": {
+      "type": "stdio",
+      "command": "docker",
+      "args": [
+        "run",
+        "-i",
+        "--rm",
+        "-e",
+        "GITHUB_PERSONAL_ACCESS_TOKEN",
+        "-e",
+        "GITHUB_READ_ONLY=1",
+        "-e",
+        "GITHUB_TOOLSETS=repos,issues,pull_requests",
+        "ghcr.io/github/github-mcp-server:2.2.0"
+      ]
+    },
+    "filesystem-docs": {
+      "type": "stdio",
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-filesystem@2.4.0",
+        "--read-only",
+        "--confine-roots",
+        "./docs"
+      ]
+    }
+  }
+}

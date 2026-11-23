@@ -1,0 +1,32 @@
+# Who must approve changes to the shared AI layer and to sensitive code.
+# Takes effect when branch protection has "Require review from Code Owners" turned on.
+# Replace the placeholder teams with your own GitHub teams.
+
+# Default: any maintainer
+*                                   @your-org/maintainers
+
+# The AI rules every tool follows
+AGENTS.md                           @your-org/platform-leads
+**/AGENTS.md                        @your-org/platform-leads
+CLAUDE.md                           @your-org/platform-leads
+/.github/copilot-instructions.md    @your-org/platform-leads
+
+# What AI tools may connect to, and the checks that enforce it
+/ai/                                @your-org/security
+/.mcp.json                          @your-org/security
+/.cursor/                           @your-org/security
+/.vscode/mcp.json                   @your-org/security
+/.claude/                           @your-org/security
+/tools/                             @your-org/security
+/.githooks/                         @your-org/security
+/.github/workflows/                 @your-org/security
+/.github/CODEOWNERS                 @your-org/security
+/.pre-commit-config.yaml            @your-org/security
+
+# Build tooling that downloads and runs binaries
+/services/orders/mvnw               @your-org/security
+/services/orders/mvnw.cmd           @your-org/security
+/services/orders/.mvn/              @your-org/security
+
+# Sensitive code: payments owners review every change, whoever or whatever wrote it
+/services/payments/                 @your-org/payments-owners

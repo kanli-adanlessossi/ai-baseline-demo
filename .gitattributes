@@ -1,0 +1,6 @@
+# Keep shell scripts runnable when the repo is checked out on Windows.
+* text=auto
+*.sh text eol=lf
+.githooks/* text eol=lf
+services/orders/mvnw text eol=lf
+*.cmd text eol=crlf

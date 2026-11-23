@@ -1,0 +1,29 @@
+{
+  "_comment": "Single source of truth for MCP servers approved for this repo. Edit this file, then run `make gen-mcp`. Changes need security review (see CODEOWNERS). Rules, enforced by tools/gen_mcp_configs.py: pin every package and image to an exact version, list the environment variables a server needs by name only, never put a secret value here.",
+  "servers": {
+    "github": {
+      "description": "Read issues, pull requests and code in our GitHub org. Read-only mode, limited toolsets.",
+      "command": "docker",
+      "args": [
+        "run", "-i", "--rm",
+        "-e", "GITHUB_PERSONAL_ACCESS_TOKEN",
+        "-e", "GITHUB_READ_ONLY=1",
+        "-e", "GITHUB_TOOLSETS=repos,issues,pull_requests",
+        "ghcr.io/github/github-mcp-server:2.2.0"
+      ],
+      "env": ["GITHUB_PERSONAL_ACCESS_TOKEN"],
+      "approvedBy": "security team",
+      "approvedOn": "2026-11-23",
+      "permissions": "Read-only tools only (GITHUB_READ_ONLY=1). Use a fine-grained token with read-only access to this org's repos."
+    },
+    "filesystem-docs": {
+      "description": "Read the repo's docs folder.",
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-filesystem@2.4.0", "--read-only", "--confine-roots", "./docs"],
+      "env": [],
+      "approvedBy": "security team",
+      "approvedOn": "2026-11-23",
+      "permissions": "docs/ folder only. --read-only withholds every write tool; --confine-roots stops clients widening the folder."
+    }
+  }
+}

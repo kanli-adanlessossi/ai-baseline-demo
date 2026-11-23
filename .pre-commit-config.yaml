@@ -1,0 +1,15 @@
+# Optional: for teams that use the pre-commit framework (https://pre-commit.com).
+# Adds gitleaks, a full secret scanner, alongside the repo's own AI-layer check.
+# The demo also works without this, through `make hooks` and .githooks/pre-commit.
+repos:
+  - repo: https://github.com/gitleaks/gitleaks
+    rev: v8.30.1  # pinned; update through a reviewed pull request
+    hooks:
+      - id: gitleaks
+  - repo: local
+    hooks:
+      - id: ai-layer
+        name: AI layer drift check
+        entry: python3 tools/check_ai_layer.py
+        language: system
+        pass_filenames: false

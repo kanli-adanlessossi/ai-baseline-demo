@@ -1,0 +1,96 @@
+name: AI guardrails
+
+# The same gates for every pull request, whichever AI tool (or person) wrote the code.
+# Make every job here a required status check on the main branch.
+#
+# Supply chain: third-party actions are pinned to full commit SHAs (the comment shows the release).
+# Update them deliberately, e.g. with Dependabot for github-actions, not by editing tags.
+on:
+  pull_request:
+    types: [opened, edited, synchronize, reopened]
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  ai-layer:
+    name: AI layer + secrets
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          fetch-depth: 0              # gitleaks scans the full history
+          persist-credentials: false  # later steps get no git token
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0  # v7.1.0
+        with:
+          python-version: "3.12"
+      - name: Tool tests
+        run: make test-tools
+      - name: AI layer drift check
+        run: make check-ai
+      - name: Secret scan (built-in)
+        run: make scan-secrets
+      - name: Secret scan (gitleaks, full history)
+        # The gitleaks CLI image needs no licence key (the gitleaks GitHub Action does, for organisations).
+        run: >
+          docker run --rm --user "$(id -u):$(id -g)" -v "$PWD:/repo"
+          ghcr.io/gitleaks/gitleaks:v8.30.1 git --redact --verbose /repo
+
+  ai-disclosure:
+    name: AI disclosure filled in
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Check the pull request description
+        env:
+          PR_BODY: ${{ github.event.pull_request.body }}  # passed as data, never pasted into the script
+        run: python3 tools/check_pr_disclosure.py
+
+  web:
+    name: TypeScript (services/web)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1  # v7.1.0
+        with:
+          node-version: 22
+      - run: make test-web
+
+  orders:
+    name: Java (services/orders)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-java@d1374f8ac74474200d16ef8ecee22c7ae7a51880  # v6.3.0
+        with:
+          distribution: temurin
+          java-version: 21
+          cache: maven
+      - run: make test-orders
+
+  payments:
+    name: Python (services/payments)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0  # v7.1.0
+        with:
+          python-version: "3.12"
+      - run: pip install -e "services/payments[dev]"
+      - run: make test-payments
